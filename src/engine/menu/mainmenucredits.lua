@@ -18,7 +18,7 @@ function MainMenuCredits:init(menu)
 
     self.pages = {
         {
-            "Kristal Engine",
+            "Kristal Engine (1/2)",
             {
                 { "Lead Developers", COLORS.silver },
                 "NyakoFox",
@@ -47,7 +47,7 @@ function MainMenuCredits:init(menu)
             }
         },
         {
-            "Kristal Engine",
+            "Kristal Engine (2/2)",
             {
                 { "GitHub Contributors", COLORS.silver },
                 "Lionmeow",
@@ -76,10 +76,13 @@ function MainMenuCredits:init(menu)
             }
         }
     }
+    
     self.selected_page = 1
 
     self.scroll_direction = "right"
     self.scroll_timer = 0
+    
+    self.applied_mods = false
 end
 
 function MainMenuCredits:registerEvents(master)
@@ -102,6 +105,191 @@ function MainMenuCredits:onEnter(old_state)
 
     self.menu.heart_target_x = 320 - 32 - 16 + 1
     self.menu.heart_target_y = 480 - 16 + 1
+    
+    if not applied_mods then
+        applied_mods = true
+        
+        local function space_count(list)
+            local count = 0
+            local second_index = nil
+            
+            for i = 1, #list do
+                if list[i] == "" then
+                    local only_empty_after = true
+                    for j = i + 1, #list do
+                        if list[j] ~= "" then
+                            only_empty_after = false
+                            break
+                        end
+                    end
+                    if only_empty_after then
+                        count = count + 1
+                        if count == 2 then
+                            second_index = i
+                        end
+                    end
+                end
+            end
+            
+            return count, second_index
+        end
+        
+        local function libsort(dict)
+            local function get_author_count(obj)
+                if obj.authors == nil then
+                    return 0
+                elseif type(obj.authors) ~= "table" then
+                    return 1
+                else
+                    return #obj.authors
+                end
+            end
+
+            -- Extract values into an array
+            local values = {}
+            for _, v in pairs(dict) do
+                table.insert(values, v)
+            end
+
+            -- Sort array
+            table.sort(values, function(a, b)
+                return get_author_count(a) < get_author_count(b)
+            end)
+
+            return values
+        end
+        
+        for k,v in pairs(Kristal.Mods.list) do
+            local should_credits = false
+            
+            if v.authors then should_credits = true end
+            
+            for k2, v2 in pairs(v.libs) do
+                if v2.authors then should_credits = true end
+            end
+            
+            if should_credits then
+                local sides = {}
+                
+                if v.authors and #v.authors > 0 then
+                    local sides = {}
+                    local authlist = v.authors
+                    if type(authlist) == "string" then
+                        authlist = {authlist}
+                    end
+                    local authors = #v.authors
+                    local slides = math.ceil(authors/10)
+                    
+                    for i=1, slides do
+                        local page = {{ v.name, COLORS.silver }, "", "", "", "", "", "", "", "", "", ""}
+                        for j=1, math.min(10, authors) do
+                            local author = v.authors[((i-1) * 10) + j]
+                            page[j+1] = author
+                        end
+                        authors = authors - 10
+                        table.insert(sides, page)
+                    end
+                
+                    if #sides%2 == 1 then
+                        table.insert(sides, {
+                            "","","","","","","","","","","",})
+                    end
+                    
+                    local pages = math.ceil(#sides/2)
+                    
+                    for i=1, math.ceil(#sides/2) do
+                        local name = v.name
+                        
+                        if pages > 1 then
+                            name = name .. " (" .. i .. "/" .. pages .. ")"
+                        end
+                        
+                        table.insert(self.pages, {
+                            name,
+                            sides[(i*2)-1],
+                            sides[i*2]
+                        })
+                    end
+                end
+                
+                local libs_sorted = libsort(v.libs)
+                
+                for k2, v2 in pairs(libs_sorted) do
+                    if v2.authors and #v2.authors > 0 then
+                        local authlist = v2.authors
+                        if type(authlist) == "string" then
+                            authlist = {authlist}
+                        end
+                        
+                        local create_new_page = false
+                        local index
+                        
+                        if #sides == 0 then
+                            create_new_page = true
+                        else
+                            local num, ind = space_count(sides[#sides])
+                            
+                            if num - 2 < #authlist then
+                                create_new_page = true
+                            else
+                                index = ind
+                            end
+                        end
+                        
+                        local authors = #authlist
+                        
+                        if create_new_page then
+                            local pages = math.ceil(authors/10)
+                            
+                            for i=1, pages do
+                                local page = {{ v2.id, COLORS.silver }, "", "", "", "", "", "", "", "", "", ""}
+                                if v2.name then
+                                    page = {{ v2.name, COLORS.silver }, "", "", "", "", "", "", "", "", "", ""}
+                                end
+                                for j=1, math.min(10, authors) do
+                                    local author = authlist[((i-1) * 10) + j]
+                                    page[j+1] = author
+                                end
+                                authors = authors - 10
+                                table.insert(sides, page)
+                            end
+                        else
+                            editing_page = sides[#sides]
+                            editing_page[index] = { v2.id, COLORS.silver }
+                            if v2.name then
+                                editing_page[index] = { v2.name, COLORS.silver }
+                            end
+                            
+                            for i=1, authors do
+                                editing_page[index + i] = authlist[i]
+                            end
+                        end
+                    end
+                end
+                
+                if #sides%2 == 1 then
+                    table.insert(sides, {
+                        "","","","","","","","","","","",})
+                end
+                
+                local pages = math.ceil(#sides/2)
+                
+                for i=1, math.ceil(#sides/2) do
+                    local name = v.name .. " LIBRARIES"
+                    
+                    if pages > 1 then
+                        name = name .. " (" .. i .. "/" .. pages .. ")"
+                    end
+                    
+                    table.insert(self.pages, {
+                        name,
+                        sides[(i*2)-1],
+                        sides[i*2]
+                    })
+                end
+            end
+        end
+    end
 end
 
 function MainMenuCredits:onKeyPressed(key, is_repeat)
