@@ -14,6 +14,8 @@ function RudeBusterBeam:init(red, x, y, tx, ty, after)
     self.target_y = ty
     self.red = red
 
+    if red then self:setScale(2.5) end
+
     self.rotation = Utils.angle(x, y, tx, ty) + math.rad(20)
     self.physics.speed = 24
     self.physics.friction = -1.5
@@ -34,7 +36,7 @@ function RudeBusterBeam:init(red, x, y, tx, ty, after)
 end
 
 function RudeBusterBeam:update()
-    self.alpha = Utils.approach(self.alpha, 1, 0.25 * DTMULT)
+    self.alpha = MathUtils.approach(self.alpha, 1, 0.25 * DTMULT)
 
     local dir = Utils.angle(self.x, self.y, self.target_x, self.target_y)
     self.rotation = self.rotation + (Utils.angleDiff(dir, self.rotation) / 4) * DTMULT
@@ -106,6 +108,7 @@ function RudeBusterBeam:update()
         sprite:fadeOutSpeedAndRemove()
         sprite:setOrigin(0.5, 0.5)
         sprite:setScale(2, 1.8)
+        if self.red then sprite:setScale(2.5) end
         sprite.rotation = self.rotation
         sprite.alpha = self.alpha - 0.2
         sprite.layer = self.layer - 0.01

@@ -54,7 +54,7 @@ function PartyBattler:init(chara, x, y)
     self.darken_fx = self:addFX(RecolorFX())
 
     self.target_sprite = Sprite("ui/battle/chartarget")
-    self.target_sprite:play(10/30)
+    self.target_sprite:play(10 / 30)
     self:addChild(self.target_sprite)
 
     self.targeted = false
@@ -110,8 +110,8 @@ function PartyBattler:getElementReduction(element)
 
     -- dummy values since we don't have elements
     local armor_elements = {
-        {element = 0, element_reduce_amount = 0},
-        {element = 0, element_reduce_amount = 0}
+        { element = 0, element_reduce_amount = 0 },
+        { element = 0, element_reduce_amount = 0 }
     }
 
     local reduction = 1
@@ -201,7 +201,7 @@ end
 ---@param swoon boolean? Whether to swoon rather than down
 function PartyBattler:removeHealth(amount, swoon)
     if (self.chara:getHealth() <= 0) then
-        amount = Utils.round(amount / 4)
+        amount = MathUtils.round(amount / 4)
         self.chara:setHealth(self.chara:getHealth() - amount)
     else
         self.chara:setHealth(self.chara:getHealth() - amount)
@@ -210,7 +210,7 @@ function PartyBattler:removeHealth(amount, swoon)
                 self.chara:setHealth(-999)
             else
                 amount = math.abs((self.chara:getHealth() - (self.chara:getStat("health") / 2)))
-                self.chara:setHealth(Utils.round(((-self.chara:getStat("health")) / 2)))
+                self.chara:setHealth(MathUtils.round(((-self.chara:getStat("health")) / 2)))
             end
         end
     end
@@ -240,7 +240,7 @@ function PartyBattler:swoon()
     self:toggleOverlay(true)
     self.overlay_sprite:setAnimation("battle/swooned")
     if self.action then
-        Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id))
+        Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id), true)
     end
     Game.battle:checkGameOver()
 end
@@ -252,7 +252,7 @@ function PartyBattler:down()
     self:toggleOverlay(true)
     self.overlay_sprite:setAnimation("battle/defeat")
     if self.action then
-        Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id))
+        Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id), true)
     end
     Game.battle:checkGameOver()
 end
@@ -269,7 +269,7 @@ function PartyBattler:setSleeping(sleeping)
             self.overlay_sprite:setAnimation("battle/defeat")
         end
         if self.action then
-            Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id))
+            Game.battle:removeAction(Game.battle:getPartyIndex(self.chara.id), true)
         end
     else
         self.sleeping = false
